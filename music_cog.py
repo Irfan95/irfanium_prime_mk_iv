@@ -30,9 +30,10 @@ def run_bot():
         print(f'{client.user} has graced you with his presence')
 
     async def play_next(ctx):
-        if queues[ctx.guild.id] != []:
-            link = queues[ctx.guild.id].pop(0)
-            await play(ctx, link=link)
+        id = int(ctx.guild.id)
+        if queues[id]:
+            next_song = queues[id].pop(0)
+            await play(ctx, link=next_song)
     
     @client.command(name="play")
     async def play(ctx, *, link):
@@ -113,11 +114,20 @@ def run_bot():
             print(e)
 
     @client.command(name="queue")
-    async def queue(ctx, *, url):
-        if ctx.guild.id not in queues:
-            queues[ctx.guild.id] = []
-        queues[ctx.guild.id].append(url)
-        await ctx.send("Added to queue!")
+    async def queue(ctx):
+        id = int(ctx.guild.id)
+        if id in queues and queues[id]:
+            queue_list = "\n".join([f"{index + 1}. {song}" for index, song in enumerate(queues[id])])
+            await ctx.send(f"Current queue:\n{queue_list}")
+        else:
+            await ctx.send("The queue is currently empty.")
+
+    # @client.command(name="queue")
+    # async def queue(ctx, *, url):
+    #     if ctx.guild.id not in queues:
+    #         queues[ctx.guild.id] = []
+    #     queues[ctx.guild.id].append(url)
+    #     await ctx.send("Added to queue!")
                        
     @client.command(name="skip")
     async def skip(ctx):
