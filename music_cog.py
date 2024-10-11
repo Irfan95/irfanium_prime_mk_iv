@@ -33,7 +33,20 @@ def run_bot():
         id = int(ctx.guild.id)
         if queues[id]:
             next_song = queues[id].pop(0)
-            await play(ctx, link=next_song)
+            loop = asyncio.get_event_loop()
+            data = await loop.run_in_executor(None, lambda: ytdl.extract_info(next_song, download=False))
+
+            song = {
+                'url': data['url'],
+                'title': data['title'],
+                'artist': data.get('uploader', 'Unknown Artist')
+            }
+            player = discord.FFmpegOpusAudio(song['url'], **ffmpeg_options)
+            voice_clients[id].play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(ctx), client.loop))
+
+            await ctx.send(f"Now playing: {song['title']} by {song['artist']}")
+        else:
+            await ctx.send("Queue is now empty.")
     
     @client.command(name="play")
     async def play(ctx, *, link):
