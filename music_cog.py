@@ -72,18 +72,20 @@ def run_bot():
 
             song = {
                 'url': data['url'],
-                'title': data['title']
+                'title': data['title'],
+                'artist': data.get('uploader', 'Unknown Artist')  # Fetch artist information
             }
             player = discord.FFmpegOpusAudio(song['url'], **ffmpeg_options)
 
             if voice_clients[id].is_playing():
                 queues[id].append(song)
-                await ctx.send(f"Song added to the queue: {song['title']}")
+                await ctx.send(f"Song added to the queue: {song['title']} by {song['artist']}")
             else:
                 voice_clients[id].play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(ctx), client.loop))
-                await ctx.send(f"Now playing: {song['title']}")
+                await ctx.send(f"Now playing: {song['title']} by {song['artist']}")
         except Exception as e:
-            print
+            print(e)
+
             
     @client.command(name="clear_queue")
     async def clear_queue(ctx):
@@ -117,10 +119,10 @@ def run_bot():
             print(e)
 
     @client.command(name="queue")
-    async def list_queue(ctx):
+    async def queue(ctx):
         id = int(ctx.guild.id)
         if id in queues and queues[id]:
-            queue_list = "\n".join([f"{index + 1}. {song['title']}" for index, song in enumerate(queues[id])])
+            queue_list = "\n".join([f"{index + 1}. {song['title']} by {song['artist']}" for index, song in enumerate(queues[id])])
             await ctx.send(f"Current queue:\n{queue_list}")
         else:
             await ctx.send("The queue is currently empty.")
