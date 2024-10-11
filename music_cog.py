@@ -73,13 +73,13 @@ def run_bot():
             player = discord.FFmpegOpusAudio(song, **ffmpeg_options)
 
             if voice_clients[id].is_playing():
-                queues[id].insert(0, link)
-                await ctx.send(f"Song added to the queue as next: {data['title']}")
+                queues[id].append(link)
+                await ctx.send(f"Song added to the queue: {data['title']}")
             else:
                 voice_clients[id].play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(ctx), client.loop))
                 await ctx.send(f"Now playing: {data['title']}")
         except Exception as e:
-            print(e)
+            print
 
     @client.command(name="clear_queue")
     async def clear_queue(ctx):
