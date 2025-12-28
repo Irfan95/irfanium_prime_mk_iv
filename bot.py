@@ -5,9 +5,12 @@ import yt_dlp  # Changed from youtube_dl to yt_dlp
 from collections import deque
 import asyncio
 from dotenv import load_dotenv
+import logging
 
 # Load environment variables
 load_dotenv()
+
+logging.getLogger('discord.voice_client').setLevel(logging.DEBUG)
 
 class MusicBot(commands.Bot):
     def __init__(self):
@@ -101,9 +104,20 @@ async def play(ctx, *, query):  # Changed parameter name and added * to allow sp
                 return
 
         if not voice_client:
-            voice_client = await channel.connect()
+            if ctx.voice_client:
+                    try:
+                        await ctx.voice_client.disconnect(force=True)
+                    except:
+                        pass
+
+            await asyncio.sleep(1)  # Prevent rapid reconnect issues
+            
+            voice_client = await channel.connect(timeout=10, reconnect=False)
+
         elif voice_client.channel != channel:
-            await voice_client.move_to(channel)
+                await voice_client.move_to(channel)
+
+
 
         bot.song_queue[ctx.guild.id].append(url)
         position = len(bot.song_queue[ctx.guild.id])
